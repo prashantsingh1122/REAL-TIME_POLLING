@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String @id @default(uuid())
+  name         String
+  email        String @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // One-to-Many: User can create many polls
+  polls Poll[]
+  // Many-to-Many: User can vote on many poll options through Vote
+  votes Vote[]
+
+  @@map("users")
+}
+
+model Poll {
+  id          String    @id @default(uuid())
+  question    String
+  isPublished Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Foreign key to User (creator)
+  creatorId   String
+  creator     User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  
+  // One-to-Many: Poll has many options
+  options     PollOption[]
+
+  @@map("polls")
+}
+
+model PollOption {
+  id     String @id @default(uuid())
+  text   String
+  
+  // Foreign key to Poll
+  pollId String
+  poll   Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  
+  // One-to-Many: PollOption can have many votes
+  votes  Vote[]
+
+  @@map("poll_options")
+}
+
+model Vote {
+  id String @id @default(uuid())
+  createdAt DateTime @default(now())
+  
+  // Foreign key to User
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Foreign key to PollOption
+  pollOptionId String
+  pollOption   PollOption @relation(fields: [pollOptionId], references: [id], onDelete: Cascade)
+  
+  // Ensure a user can only vote once per poll option
+  @@unique([userId, pollOptionId])
+  @@map("votes")
+}
