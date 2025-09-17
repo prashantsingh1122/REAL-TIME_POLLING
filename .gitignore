@@ -11,6 +11,10 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Database
+*.db
+*.sqlite
+
 # Logs
 logs
 *.log
@@ -23,9 +27,12 @@ pids
 
 # Coverage directory used by tools like istanbul
 coverage/
-*.lcov
+
+# nyc test coverage
+.nyc_output
 
 # Dependency directories
+node_modules/
 jspm_packages/
 
 # Optional npm cache directory
@@ -41,10 +48,7 @@ jspm_packages/
 .yarn-integrity
 
 # dotenv environment variables file
-.env.test
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
+.env
 
 # IDE files
 .vscode/
@@ -62,9 +66,5 @@ jspm_packages/
 ehthumbs.db
 Thumbs.db
 
-# Build outputs
-dist/
-build/
-
-# Prisma
-.env.backup
+# Docker
+docker-compose.override.yml

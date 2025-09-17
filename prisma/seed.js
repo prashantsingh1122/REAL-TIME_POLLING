@@ -7,6 +7,14 @@ async function main() {
   console.log('🌱 Starting database seeding...');
 
   try {
+    // Make seeding idempotent by clearing existing data (development only)
+    await prisma.$transaction([
+      prisma.vote.deleteMany(),
+      prisma.pollOption.deleteMany(),
+      prisma.poll.deleteMany(),
+      prisma.user.deleteMany()
+    ]);
+
     // Create sample users
     const passwordHash = await bcrypt.hash('password123', 12);
 

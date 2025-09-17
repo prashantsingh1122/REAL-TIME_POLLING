@@ -89,99 +89,8 @@ const pollController = {
   // Get all polls with their options and vote counts
   getPolls: async (req, res, next) => {
     try {
-      const { 
-        page = 1, 
-        limit = 10, 
-        search, 
-        isPublished,
-        creatorId,
-        includeVotes = true 
-      } = req.query;
-      
-      const skip = (parseInt(page) - 1) * parseInt(limit);
-
-      // Build where clause
-      const where = {};
-      
-      if (search) {
-        where.question = { contains: search, mode: 'insensitive' };
-      }
-      
-      if (isPublished !== undefined) {
-        where.isPublished = isPublished === 'true';
-      }
-      
-      if (creatorId) {
-        where.creatorId = creatorId;
-      }
-
-      // Get polls with pagination
-      const [polls, total] = await Promise.all([
-        prisma.poll.findMany({
-          where,
-          include: {
-            creator: {
-              select: {
-                id: true,
-                name: true,
-                email: true
-              }
-            },
-            options: {
-              select: {
-                id: true,
-                text: true,
-                ...(includeVotes === 'true' && {
-                  _count: {
-                    select: {
-                      votes: true
-                    }
-                  }
-                })
-              }
-            },
-            _count: {
-              select: {
-                options: true
-              }
-            }
-          },
-          orderBy: { createdAt: 'desc' },
-          skip,
-          take: parseInt(limit)
-        }),
-        prisma.poll.count({ where })
-      ]);
-
-      const totalPages = Math.ceil(total / parseInt(limit));
-
-      res.status(200).json({
-        success: true,
-        data: {
-          polls,
-          pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            total,
-            totalPages,
-            hasNext: parseInt(page) < totalPages,
-            hasPrev: parseInt(page) > 1
-          }
-        }
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  // Get poll by ID with detailed information
-  getPollById: async (req, res, next) => {
-    try {
-      const { id } = req.params;
-      const { includeVotes = true } = req.query;
-
-      const poll = await prisma.poll.findUnique({
-        where: { id },
+      // Simplified to match original prompt requirements - no pagination, search, or filtering
+      const polls = await prisma.poll.findMany({
         include: {
           creator: {
             select: {
@@ -194,84 +103,33 @@ const pollController = {
             select: {
               id: true,
               text: true,
-              ...(includeVotes === 'true' && {
-                votes: {
-                  select: {
-                    id: true,
-                    createdAt: true,
-                    user: {
-                      select: {
-                        id: true,
-                        name: true
-                      }
-                    }
-                  }
-                },
-                _count: {
-                  select: {
-                    votes: true
-                  }
+              _count: {
+                select: {
+                  votes: true
                 }
-              })
+              }
             }
           }
-        }
+        },
+        orderBy: { createdAt: 'desc' }
       });
-
-      if (!poll) {
-        return res.status(404).json({
-          success: false,
-          error: 'Poll not found'
-        });
-      }
-
-      // Calculate total votes for percentage calculation
-      if (includeVotes === 'true') {
-        const totalVotes = poll.options.reduce((sum, option) => sum + option._count.votes, 0);
-        
-        // Add percentage to each option
-        poll.options = poll.options.map(option => ({
-          ...option,
-          percentage: totalVotes > 0 ? Math.round((option._count.votes / totalVotes) * 100) : 0
-        }));
-
-        poll.totalVotes = totalVotes;
-      }
 
       res.status(200).json({
         success: true,
-        data: { poll }
+        data: { polls }
       });
     } catch (error) {
       next(error);
     }
   },
 
-  // Update poll (publish/unpublish)
-  updatePoll: async (req, res, next) => {
+  // Get poll by ID with detailed information
+  getPollById: async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { question, isPublished } = req.body;
 
-      // Check if poll exists
-      const existingPoll = await prisma.poll.findUnique({
-        where: { id }
-      });
-
-      if (!existingPoll) {
-        return res.status(404).json({
-          success: false,
-          error: 'Poll not found'
-        });
-      }
-
-      // Update poll
-      const poll = await prisma.poll.update({
+      const poll = await prisma.poll.findUnique({
         where: { id },
-        data: {
-          ...(question && { question }),
-          ...(isPublished !== undefined && { isPublished })
-        },
         include: {
           creator: {
             select: {
@@ -294,9 +152,26 @@ const pollController = {
         }
       });
 
+      if (!poll) {
+        return res.status(404).json({
+          success: false,
+          error: 'Poll not found'
+        });
+      }
+
+      // Calculate total votes and percentages
+      const totalVotes = poll.options.reduce((sum, option) => sum + option._count.votes, 0);
+      
+      // Add percentage to each option
+      poll.options = poll.options.map(option => ({
+        ...option,
+        percentage: totalVotes > 0 ? Math.round((option._count.votes / totalVotes) * 100) : 0
+      }));
+
+      poll.totalVotes = totalVotes;
+
       res.status(200).json({
         success: true,
-        message: 'Poll updated successfully',
         data: { poll }
       });
     } catch (error) {
@@ -304,36 +179,8 @@ const pollController = {
     }
   },
 
-  // Delete poll
-  deletePoll: async (req, res, next) => {
-    try {
-      const { id } = req.params;
-
-      // Check if poll exists
-      const existingPoll = await prisma.poll.findUnique({
-        where: { id }
-      });
-
-      if (!existingPoll) {
-        return res.status(404).json({
-          success: false,
-          error: 'Poll not found'
-        });
-      }
-
-      // Delete poll (cascade will handle options and votes)
-      await prisma.poll.delete({
-        where: { id }
-      });
-
-      res.status(200).json({
-        success: true,
-        message: 'Poll deleted successfully'
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+  // Note: Poll update and delete were not required in the original prompt
+  // Keeping only the core functionality: create and retrieve polls
 };
 
 module.exports = pollController;

@@ -159,9 +159,6 @@ const voteController = {
   getPollVotes: async (req, res, next) => {
     try {
       const { pollId } = req.params;
-      const { page = 1, limit = 10 } = req.query;
-      
-      const skip = (parseInt(page) - 1) * parseInt(limit);
 
       // Check if poll exists
       const poll = await prisma.poll.findUnique({
@@ -175,42 +172,29 @@ const voteController = {
         });
       }
 
-      // Get votes with pagination
-      const [votes, total] = await Promise.all([
-        prisma.vote.findMany({
-          where: {
-            pollOption: {
-              pollId
+      // Get votes (simplified - no pagination as not required in prompt)
+      const votes = await prisma.vote.findMany({
+        where: {
+          pollOption: {
+            pollId
+          }
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true
             }
           },
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true
-              }
-            },
-            pollOption: {
-              select: {
-                id: true,
-                text: true
-              }
-            }
-          },
-          orderBy: { createdAt: 'desc' },
-          skip,
-          take: parseInt(limit)
-        }),
-        prisma.vote.count({
-          where: {
-            pollOption: {
-              pollId
+          pollOption: {
+            select: {
+              id: true,
+              text: true
             }
           }
-        })
-      ]);
-
-      const totalPages = Math.ceil(total / parseInt(limit));
+        },
+        orderBy: { createdAt: 'desc' }
+      });
 
       res.status(200).json({
         success: true,
@@ -219,14 +203,6 @@ const voteController = {
           poll: {
             id: poll.id,
             question: poll.question
-          },
-          pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            total,
-            totalPages,
-            hasNext: parseInt(page) < totalPages,
-            hasPrev: parseInt(page) > 1
           }
         }
       });
@@ -258,77 +234,8 @@ const voteController = {
     }
   },
 
-  // Remove a vote (if allowed)
-  removeVote: async (req, res, next) => {
-    try {
-      const { voteId } = req.params;
-
-      // Check if vote exists
-      const vote = await prisma.vote.findUnique({
-        where: { id: voteId },
-        include: {
-          pollOption: {
-            include: {
-              poll: {
-                select: {
-                  id: true,
-                  question: true
-                }
-              }
-            }
-          },
-          user: {
-            select: {
-              id: true,
-              name: true
-            }
-          }
-        }
-      });
-
-      if (!vote) {
-        return res.status(404).json({
-          success: false,
-          error: 'Vote not found'
-        });
-      }
-
-      const pollId = vote.pollOption.poll.id;
-
-      // Delete the vote
-      await prisma.vote.delete({
-        where: { id: voteId }
-      });
-
-      // Get updated poll results for real-time broadcast
-      const updatedPollResults = await getPollResults(pollId);
-
-      // Emit real-time update via WebSocket
-      const io = req.app.get('io');
-      if (io) {
-        io.to(`poll-${pollId}`).emit('pollUpdate', {
-          pollId,
-          results: updatedPollResults,
-          voteRemoved: {
-            optionId: vote.pollOption.id,
-            optionText: vote.pollOption.text,
-            voterName: vote.user.name,
-            timestamp: new Date()
-          }
-        });
-      }
-
-      res.status(200).json({
-        success: true,
-        message: 'Vote removed successfully',
-        data: {
-          pollResults: updatedPollResults
-        }
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+  // Note: Vote removal was not required in the original prompt
+  // Keeping only the core functionality: submit vote and get results
 };
 
 // Helper function to get poll results

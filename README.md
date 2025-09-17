@@ -26,7 +26,7 @@ Before running this project, make sure you have the following installed:
 
 - **Node.js** (v16.0.0 or higher)
 - **npm** or **yarn**
-- **PostgreSQL** (v12.0 or higher)
+- **PostgreSQL** (v12.0 or higher) or **Docker** (recommended)
 - **Git**
 
 ## 🛠️ Installation & Setup
@@ -55,8 +55,11 @@ cp .env.example .env
 Edit the `.env` file with your configuration:
 
 ```env
-# Database Configuration
-DATABASE_URL="postgresql://username:password@localhost:5432/realtime_polling_db"
+# Database Configuration (Docker)
+DATABASE_URL="postgresql://polling_user:password123@localhost:5432/realtime_polling_db"
+
+# Database Configuration (Local PostgreSQL)
+# DATABASE_URL="postgresql://username:password@localhost:5432/realtime_polling_db"
 
 # Server Configuration
 PORT=5000
@@ -68,7 +71,35 @@ CLIENT_URL=http://localhost:3000
 
 ### 4. Database Setup
 
-#### Create PostgreSQL Database
+#### Option A: Using Docker Compose (Recommended)
+
+```bash
+# Start PostgreSQL with Docker Compose
+docker-compose up -d
+
+# Verify container is running
+docker-compose ps
+
+# View logs if needed
+docker-compose logs postgres
+```
+
+#### Option B: Using Docker Run
+
+```bash
+# Start PostgreSQL with Docker
+docker run --name polling-postgres \
+  -e POSTGRES_DB=realtime_polling_db \
+  -e POSTGRES_USER=polling_user \
+  -e POSTGRES_PASSWORD=password123 \
+  -p 5432:5432 \
+  -d postgres:15
+
+# Verify container is running
+docker ps
+```
+
+#### Option C: Local PostgreSQL Installation
 
 ```bash
 # Connect to PostgreSQL

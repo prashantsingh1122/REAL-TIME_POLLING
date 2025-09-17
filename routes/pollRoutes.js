@@ -26,22 +26,6 @@ const createPollValidation = [
     .withMessage('isPublished must be a boolean value')
 ];
 
-// Validation middleware for updating a poll
-const updatePollValidation = [
-  param('id')
-    .isUUID()
-    .withMessage('Invalid poll ID format'),
-  body('question')
-    .optional()
-    .trim()
-    .isLength({ min: 5, max: 500 })
-    .withMessage('Question must be between 5 and 500 characters'),
-  body('isPublished')
-    .optional()
-    .isBoolean()
-    .withMessage('isPublished must be a boolean value')
-];
-
 // Validation middleware for poll ID parameter
 const pollIdValidation = [
   param('id')
@@ -54,16 +38,12 @@ const pollIdValidation = [
 // POST /api/polls - Create a new poll
 router.post('/', createPollValidation, pollController.createPoll);
 
-// GET /api/polls - Get all polls with optional filtering
+// GET /api/polls - Get all polls
 router.get('/', pollController.getPolls);
 
 // GET /api/polls/:id - Get a specific poll by ID
 router.get('/:id', pollIdValidation, pollController.getPollById);
 
-// PUT /api/polls/:id - Update a poll
-router.put('/:id', updatePollValidation, pollController.updatePoll);
-
-// DELETE /api/polls/:id - Delete a poll
-router.delete('/:id', pollIdValidation, pollController.deletePoll);
+// Note: Poll update and delete endpoints removed as they were not in the original prompt
 
 module.exports = router;
