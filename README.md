@@ -71,20 +71,10 @@ CLIENT_URL=http://localhost:3000
 
 ### 4. Database Setup
 
-#### Option A: Using Docker Compose (Recommended)
 
-```bash
-# Start PostgreSQL with Docker Compose
-docker-compose up -d
-
-# Verify container is running
-docker-compose ps
-
-# View logs if needed
-docker-compose logs postgres
 ```
 
-#### Option B: Using Docker Run
+#### Option A: Using Docker Run
 
 ```bash
 # Start PostgreSQL with Docker
@@ -99,7 +89,7 @@ docker run --name polling-postgres \
 docker ps
 ```
 
-#### Option C: Local PostgreSQL Installation
+#### Option B: Local PostgreSQL Installation
 
 ```bash
 # Connect to PostgreSQL
