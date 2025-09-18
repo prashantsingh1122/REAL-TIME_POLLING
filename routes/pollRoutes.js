@@ -44,6 +44,6 @@ router.get('/', pollController.getPolls);
 // GET /api/polls/:id - Get a specific poll by ID
 router.get('/:id', pollIdValidation, pollController.getPollById);
 
-// Note: Poll update and delete endpoints removed as they were not in the original prompt
+
 
 module.exports = router;

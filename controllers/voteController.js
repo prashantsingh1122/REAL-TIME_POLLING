@@ -234,8 +234,7 @@ const voteController = {
     }
   },
 
-  // Note: Vote removal was not required in the original prompt
-  // Keeping only the core functionality: submit vote and get results
+ 
 };
 
 // Helper function to get poll results

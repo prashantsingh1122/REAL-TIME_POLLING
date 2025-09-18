@@ -179,8 +179,6 @@ const pollController = {
     }
   },
 
-  // Note: Poll update and delete were not required in the original prompt
-  // Keeping only the core functionality: create and retrieve polls
 };
 
 module.exports = pollController;

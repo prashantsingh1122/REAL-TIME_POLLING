@@ -39,6 +39,6 @@ router.get('/poll/:pollId', pollIdValidation, voteController.getPollVotes);
 // GET /api/votes/poll/:pollId/results - Get poll results (vote counts and percentages)
 router.get('/poll/:pollId/results', pollIdValidation, voteController.getPollResults);
 
-// Note: Vote removal endpoint removed as it was not in the original prompt
+
 
 module.exports = router;
